@@ -1,0 +1,190 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+#define MAX_WORD_CHARS (30)
+
+typedef struct _WordNode
+{
+	char word[MAX_WORD_CHARS];
+	struct _WordNode *next;
+} WordNode;
+
+WordNode *translateWord(WordNode *NextWord)
+{
+	char FirstLetter;
+	char LastCharacter;
+	char suffix[MAX_WORD_CHARS];
+	WordNode *NewWord = NULL;
+	FirstLetter = tolower(NextWord->word[0]);
+	LastCharacter = NextWord->word[strlen(NextWord->word)-1];
+	if (strlen(NextWord->word) > 1)
+	{
+		if (FirstLetter == 'a' || FirstLetter == 'e' || FirstLetter == 'i' || FirstLetter =='o' || FirstLetter == 'u')
+		{
+			strcpy(suffix, "tay");
+		}
+		else
+		{
+			strcpy(suffix, "ay");
+		}
+	}
+	else if (NextWord->word[0] != '\n')
+	{
+		strcpy(suffix, "tay");
+	}
+	else
+	{
+		strcpy(suffix, "");
+	}
+	NewWord = malloc(sizeof(WordNode));
+	strcpy(NewWord->word, NextWord->word + 1);
+	if ((LastCharacter == '\n') && (strlen(NewWord->word) > 1))
+	{
+		NewWord->word[strlen(NewWord->word)-1] = '\0';
+		LastCharacter = NewWord->word[strlen(NewWord->word)-1];
+	}
+	if (LastCharacter == '.' || LastCharacter == ',' || LastCharacter == '?' || LastCharacter == ':' || LastCharacter == ';')
+	{
+		NewWord->word[strlen(NewWord->word)-1] = FirstLetter;
+		strcat(NewWord->word, suffix);
+		NewWord->word[strlen(NewWord->word)+1] = '\0';
+		NewWord->word[strlen(NewWord->word)] = LastCharacter;
+	}
+	else
+	{
+		NewWord->word[strlen(NewWord->word)+1] = '\0';
+		NewWord->word[strlen(NewWord->word)] = FirstLetter;
+		strcat(NewWord->word, suffix);
+	}
+	NewWord->word[strlen(NewWord->word)+1] = '\0';
+	if (isupper(NextWord->word[0]))
+	{
+		NewWord->word[0] = toupper(NewWord->word[0]);
+	}
+	else
+	{
+		NewWord->word[0] = tolower(NewWord->word[0]);
+	}
+	return NewWord;
+}
+
+
+void printPhrase(WordNode *Phrase)
+{
+	while (Phrase != NULL)
+	{
+		printf("%s ", Phrase->word);
+		Phrase = Phrase->next;
+	}
+	printf("\n");
+}
+
+
+void freePhrase(WordNode *Phrase)
+{
+	WordNode *temp;
+	while (Phrase != NULL)
+	{
+		temp = Phrase;
+		Phrase = Phrase->next;
+		free(temp);
+	}
+}
+
+
+int main()
+{
+	int number = -1;
+	char buffer[100];
+	char phrase[100];
+	char *token = NULL;
+	WordNode *temp = NULL;
+	WordNode *temp2 = NULL;
+	WordNode *EnglishWord = NULL;
+	WordNode *PigLatinWord = NULL;
+	WordNode *EnglishPhrase = NULL;
+	WordNode *PigLatinPhrase = NULL;
+	while (number != 0)
+	{
+		printf("\nMenu:\n");
+		printf("Exit the program. (Enter the number 0)\n");
+		printf("Input a phrase in English. (Enter the number 1)\n");
+		printf("Translate the current phrase from English to Pig Latin. (Enter the number 2)\n");
+		printf("Print the original phrase to the screen. (Enter the number 3)\n");
+		printf("Print the translated phrase to the screen. (Enter the number 4)\n");
+		fgets(buffer, sizeof(buffer), stdin);
+		sscanf(buffer, "%d", &number);
+		switch (number)
+		{
+			case 0:
+				break;
+			case 1:
+				freePhrase(EnglishPhrase);
+				EnglishPhrase = NULL;
+				printf("Please enter an English Phrase:\n");
+				fgets(phrase, sizeof(phrase), stdin);
+				token = strtok(phrase, " ");
+				while (token != NULL)
+				{
+					EnglishWord = malloc(sizeof(WordNode));
+					strcpy(EnglishWord->word, token);
+					EnglishWord->next = NULL;
+					if (EnglishPhrase != NULL)
+					{
+						temp = EnglishPhrase;
+						while (temp->next != NULL)
+						{
+							temp = temp->next;
+						}
+						temp->next = EnglishWord;
+					}
+					else
+					{
+						EnglishPhrase = EnglishWord;
+					}
+					token = strtok(NULL, " ");
+				}
+				break;
+			case 2:
+				freePhrase(PigLatinPhrase);
+				PigLatinPhrase = NULL;
+				temp = EnglishPhrase;
+				while (temp != NULL)
+	   			{
+					PigLatinWord = translateWord(temp);
+					PigLatinWord->next = NULL;
+					if (PigLatinPhrase != NULL)
+					{
+						temp2 = PigLatinPhrase;
+						while (temp2->next != NULL)
+						{
+							temp2 = temp2->next;
+						}
+						temp2->next = PigLatinWord;
+					}
+					else
+					{
+						PigLatinPhrase = PigLatinWord;
+					}
+					temp = temp->next;
+				}
+				break;
+			case 3:
+				printf("English Phrase:\n");
+				printPhrase(EnglishPhrase);
+				break;
+			case 4:
+				printf("Pig Latin Phrase:\n");
+				printPhrase(PigLatinPhrase);
+				break;
+			default:
+				printf("The number you enter must be between 0 and 4. Please try again.\n");
+				break;
+		}
+	}
+	temp = NULL;
+    	freePhrase(EnglishPhrase);
+	freePhrase(PigLatinPhrase);
+	return 0;
+}
